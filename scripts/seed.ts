@@ -38,16 +38,16 @@ async function seed() {
     const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
     const userDefinitions = [
-      { email: `alice.${ROLL_NO}@pressuredesk.io`, name: 'Alice Walker' },
-      { email: `bob.${ROLL_NO}@pressuredesk.io`, name: 'Bob Martinez' },
-      { email: `charlie.${ROLL_NO}@pressuredesk.io`, name: 'Charlie Chen' },
-      { email: `dave.${ROLL_NO}@pressuredesk.io`, name: 'Dave Patel' },
-      { email: `eve.${ROLL_NO}@pressuredesk.io`, name: 'Eve Johnson' },
-      { email: `frank.${ROLL_NO}@pressuredesk.io`, name: 'Frank Taylor' },
-      { email: `grace.${ROLL_NO}@pressuredesk.io`, name: 'Grace Hopper' },
-      { email: `heidi.${ROLL_NO}@pressuredesk.io`, name: 'Heidi Davis' },
-      { email: `ivan.${ROLL_NO}@pressuredesk.io`, name: 'Ivan Petrov' },
-      { email: `judy.${ROLL_NO}@pressuredesk.io`, name: 'Judy Robinson' }
+      { email: 'alice@pressuredesk.io', name: 'Alice Walker' },
+      { email: 'bob@pressuredesk.io', name: 'Bob Martinez' },
+      { email: 'charlie@pressuredesk.io', name: 'Charlie Chen' },
+      { email: 'dave@pressuredesk.io', name: 'Dave Patel' },
+      { email: 'eve@pressuredesk.io', name: 'Eve Johnson' },
+      { email: 'frank@pressuredesk.io', name: 'Frank Taylor' },
+      { email: 'grace@pressuredesk.io', name: 'Grace Hopper' },
+      { email: 'heidi@pressuredesk.io', name: 'Heidi Davis' },
+      { email: 'ivan@pressuredesk.io', name: 'Ivan Petrov' },
+      { email: 'judy@pressuredesk.io', name: 'Judy Robinson' }
     ];
 
     const userIds: string[] = [];
@@ -272,9 +272,9 @@ async function seed() {
     console.log(`Unassigned Urgent Items: ${unassignedUrgent.rows[0].count}`);
     console.log(`Awaiting Approval Items: ${awaitingApproval.rows[0].count}`);
     console.log('Login credentials for testing:');
-    console.log(`  Lead User:  alice.${ROLL_NO}@pressuredesk.io  /  Password123!`);
-    console.log(`  Member:     bob.${ROLL_NO}@pressuredesk.io    /  Password123!`);
-    console.log(`  Viewer:     ivan.${ROLL_NO}@pressuredesk.io   /  Password123!`);
+    console.log('  Lead User:  alice@pressuredesk.io  /  Password123!');
+    console.log('  Member:     bob@pressuredesk.io    /  Password123!');
+    console.log('  Viewer:     ivan@pressuredesk.io   /  Password123!');
     console.log('===========================================================\n');
 
   } finally {
