@@ -1,20 +1,20 @@
 version: '3.8'
 
 services:
-  postgres:
+  db:
     image: postgres:15-alpine
-    container_name: pressuredesk_postgres
+    container_name: pressuredesk_db
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-pressuredesk}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-pressuredesk123}
-      POSTGRES_DB: ${DB_NAME:-pressuredesk_db}
+      POSTGRES_DB: ${DB_NAME:-pressuredesk}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pressuredesk} -d ${DB_NAME:-pressuredesk_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pressuredesk} -d ${DB_NAME:-pressuredesk}"]
       interval: 5s
       timeout: 5s
       retries: 5
