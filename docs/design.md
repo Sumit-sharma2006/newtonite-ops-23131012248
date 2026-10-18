@@ -9,7 +9,7 @@
 | **Who can create items?** | Any user with role `Member`, `Lead`, or `Admin` in the target team. `Viewer` cannot create items. Items always start in `status = 'OPEN'` with `assignee_id = NULL`. | Viewers are read-only auditors/stakeholders. Operational items should only originate from active contributors or team leaders. | **Y** |
 | **Who can claim items?** | Any `Member`, `Lead`, or `Admin` of the item's assigned team can claim an item that is currently in `status = 'OPEN'` and has `assignee_id IS NULL`. Claiming sets `assignee_id = req.user.id` and transitions status to `IN_PROGRESS`. | Keeps task dispatch self-service and decentralized while guaranteeing that the claiming user belongs to the operational team. | **Y** |
 | **Can a Viewer comment?** | Yes, `Viewer` can post comments, but cannot change state, assignee, priority, or metadata. | External stakeholders, QA, or auditors often need to add clarifying context or customer feedback without modifying operational workflow states. | **Y** |
-| **What happens on conflict?** | Optimistic concurrency failure returns `409 Conflict` with error code `VERSION_CONFLICT` and the full, current representation of the work item. | Allows client UI to show a clean diff or notification ("Item modified by another user. Review latest changes") without losing updates. | **N** |
+| **What happens on conflict?** | Optimistic concurrency failure returns `409 Conflict` with error code `STALE_VERSION` and the full, current representation of the work item. | Allows client UI to show a clean diff or notification ("Item modified by another user. Review latest changes") without losing updates. | **N** |
 | **Can items move backwards (e.g. reopen)?** | Yes, but strictly controlled: `Resolved -> In Progress` can be executed by `Member`, `Lead`, or `Admin` (with reason). `Closed -> Open` (reopen) is strictly restricted to `Lead` and `Admin`. | Real-world fixes fail validation and must resume work; however, reopening archived/closed items impacts SLA reporting and requires team lead governance. | **Y** |
 | **Who can reassign?** | The current assignee can hand off to another member of the same team. `Lead` and `Admin` can assign, reassign, or unassign any item within their team. Members cannot reassign tickets assigned to others. | Prevents operational chaos and task-dumping while providing leads full dispatch authority. | **Y** |
 | **What does "urgent" mean?** | Exactly `priority = 'URGENT' AND assignee_id IS NULL AND status = 'OPEN'`. | Consistent, deterministic condition across both assumptions and dashboard queries, directly backed by a Postgres partial index. | **Y** |
@@ -501,7 +501,7 @@ All endpoints require `Authorization: Bearer <token>` unless marked public. All 
   RETURNING *;
   ```
 * If `rowCount === 0`, query latest item:
-  * If item exists $\to$ return `409 Conflict` with `{ error: { code: "VERSION_CONFLICT", details: { latest: item } } }`.
+  * If item exists $\to$ return `409 Conflict` with `{ error: { code: "STALE_VERSION", details: { latest_item: item } } }`.
   * If item does not exist $\to$ return `404 Not Found`.
 
 #### 4. Cursor Pagination Precision (Microseconds vs Milliseconds)

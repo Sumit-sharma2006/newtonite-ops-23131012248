@@ -19,6 +19,50 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: pressuredesk_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER:-pressuredesk}:${DB_PASSWORD:-pressuredesk123}@db:5432/${DB_NAME:-pressuredesk}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-development-jwt-token-key-2026}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npm run migrate && npm start"
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: pressuredesk_worker
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${DB_USER:-pressuredesk}:${DB_PASSWORD:-pressuredesk123}@db:5432/${DB_NAME:-pressuredesk}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-development-jwt-token-key-2026}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run worker
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: pressuredesk_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
     driver: local
