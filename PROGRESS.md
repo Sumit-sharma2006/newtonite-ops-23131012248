@@ -15,7 +15,8 @@
 | **Phase 1** | Database Schema, Migrations, Docker & Seed | **DONE** | [`migrations/`](file:///c:/Users/Sumit/Downloads/PressureDesk/migrations), [`docker-compose.yml`](file:///c:/Users/Sumit/Downloads/PressureDesk/docker-compose.yml), [`scripts/seed.ts`](file:///c:/Users/Sumit/Downloads/PressureDesk/scripts/seed.ts), commit `97f0c1b`, `a9fd80e` |
 | **Phase 2** | Auth, Fresh DB Memberships, Central RBAC & State Machine | **DONE** | [`backend/src/modules/permissions/permissions.ts`](file:///c:/Users/Sumit/Downloads/PressureDesk/backend/src/modules/permissions/permissions.ts), [`backend/src/modules/work-items/state-machine.ts`](file:///c:/Users/Sumit/Downloads/PressureDesk/backend/src/modules/work-items/state-machine.ts), 51 Vitest tests passing, commit `7ee99f9` |
 | **Phase 3+4** | Work Items API, Atomic Claim, Optimistic Lock & Idempotency | **DONE** | [`backend/src/modules/work-items/`](file:///c:/Users/Sumit/Downloads/PressureDesk/backend/src/modules/work-items), [`docs/manual-checks.md`](file:///c:/Users/Sumit/Downloads/PressureDesk/docs/manual-checks.md), commit `7e61c77` |
-| **Phase 5** | Frontend React Dashboard & Concurrency Tests | *Pending* | TanStack Query tabs, optimistic UI, Supertest concurrency suite |
+| **Phase 5** | Integration Test Suite & Concurrency / Error Mapping | **DONE** | [`tests/integration/`](file:///c:/Users/Sumit/Downloads/PressureDesk/tests/integration), commits `49f4ab9`, `e5aa663` |
+| **Phase 7** | React Frontend Dashboard, Detail View & Optimistic UI | **DONE** | [`frontend/`](file:///c:/Users/Sumit/Downloads/PressureDesk/frontend), commit `fab31c2` |
 
 ---
 
