@@ -447,6 +447,18 @@ export class WorkItemsRepository {
       awaiting_my_approval: parseInt(result.rows[0].awaiting_my_approval, 10)
     };
   }
+
+  async getTeamMembers(teamId: string): Promise<{ id: string; full_name: string; email: string; role: string }[]> {
+    const result = await pool.query(
+      `SELECT u.id, u.full_name, u.email, m.role
+       FROM memberships m
+       JOIN users u ON u.id = m.user_id
+       WHERE m.team_id = $1
+       ORDER BY u.full_name ASC;`,
+      [teamId]
+    );
+    return result.rows;
+  }
 }
 
 export const workItemsRepository = new WorkItemsRepository();

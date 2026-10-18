@@ -39,6 +39,19 @@ workItemsRouter.post('/', async (req: Request, res: Response, next: NextFunction
 });
 
 /**
+ * GET /items/team-members/:teamId
+ * Retrieve list of members for a team.
+ */
+workItemsRouter.get('/team-members/:teamId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await workItemsService.getTeamMembers(req.user!, req.params.teamId);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * GET /items/:id
  * Retrieve a single work item. Returns 404 for non-team members.
  */
@@ -88,6 +101,15 @@ workItemsRouter.post('/:id/comments', async (req: Request, res: Response, next: 
  * Optimistic locking update of title, description, due_date, or priority (Lead/Admin only).
  */
 workItemsRouter.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const item = await workItemsService.updateItem(req.user!, req.params.id, req.body);
+    res.status(200).json({ item });
+  } catch (err) {
+    next(err);
+  }
+});
+
+workItemsRouter.post('/:id/edit', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const item = await workItemsService.updateItem(req.user!, req.params.id, req.body);
     res.status(200).json({ item });

@@ -610,6 +610,15 @@ export class WorkItemsService {
       teamId
     );
   }
+
+  async getTeamMembers(user: AuthenticatedUser, teamId: string) {
+    const isMember = user.memberships.some((m) => m.team_id === teamId);
+    if (!isMember) {
+      throw new AppError(404, 'TEAM_NOT_FOUND', 'Team not found or access denied.');
+    }
+    const members = await workItemsRepository.getTeamMembers(teamId);
+    return { members };
+  }
 }
 
 export const workItemsService = new WorkItemsService();
