@@ -33,7 +33,7 @@ describe('Integration - Workflow State Machine & Four-Eyes Enforcement', () => {
       .set('Authorization', `Bearer ${fixture.leadA.token}`)
       .send({ version: 1, to_status: 'RESOLVED' });
 
-    expect(resInvalid.status).toBe(403);
+    expect(resInvalid.status).toBe(400);
     expect(resInvalid.body.error.code).toBe('INVALID_TRANSITION');
   });
 

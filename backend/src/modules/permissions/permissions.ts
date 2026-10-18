@@ -43,7 +43,7 @@ export interface PermissionContext {
 
 export type PermissionResult =
   | { allowed: true }
-  | { allowed: false; status: 403 | 404; code: string; message: string };
+  | { allowed: false; status: 400 | 403 | 404; code: string; message: string };
 
 /**
  * Pure authorization function evaluating whether a user can perform an action.
@@ -182,7 +182,7 @@ export function can(action: PermissionAction | PermissionActionType, ctx: Permis
       if (!transitionResult.allowed) {
         return {
           allowed: false,
-          status: 403,
+          status: transitionResult.code === 'INVALID_TRANSITION' ? 400 : 403,
           code: transitionResult.code,
           message: transitionResult.message
         };

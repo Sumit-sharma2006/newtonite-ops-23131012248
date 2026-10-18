@@ -1,9 +1,14 @@
 import { Pool } from 'pg';
 import { env } from '../config/env.js';
 
+const connectionString =
+  process.env.NODE_ENV === 'test' || process.env.VITEST
+    ? env.TEST_DATABASE_URL
+    : env.DATABASE_URL;
+
 // Create a single shared connection pool for the backend service
 export const pool = new Pool({
-  connectionString: env.DATABASE_URL,
+  connectionString,
   max: 20, // default maximum pool size
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000

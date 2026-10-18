@@ -358,13 +358,31 @@ All endpoints require `Authorization: Bearer <token>` unless marked public. All 
 | `GET` | `/items` | Authenticated<br>Team Member | **Query:** `team_id` (required), `status`, `priority`, `assignee_id`, `q`, `cursor` (base64 `created_at_text,id`), `limit` | `200 OK`<br>`{ items: [...], next_cursor: string \| null, has_more: boolean }` | `400 Bad Request`<br>`403 Forbidden` (not in team) |
 | `POST` | `/items` | Authenticated<br>`Member+` in team<br>**Header:** `Idempotency-Key` (required) | `{ team_id, title, description, type, priority, due_date? }` *(No assignee allowed at creation)* | `201 Created`<br>`{ item: WorkItem }` | `400 Validation Error`<br>`403 Insufficient Role`<br>`409 Idempotency Conflict` |
 | `GET` | `/items/:id` | Authenticated<br>Team Member | None | `200 OK`<br>`{ item: WorkItem }` | `404 Not Found` (item absent or user not in team) |
-| `PATCH` | `/items/:id` | Authenticated<br>`Member+` (Assignee, Lead, Admin) | `{ version: number, title?, description?, due_date?, priority? }`<br>*(Changing `priority` requires `Lead` or `Admin` role)* | `200 OK`<br>`{ item: WorkItem }` | `400 Validation Error`<br>`403 Insufficient Role`<br>`404 Not Found`<br>`409 Version Conflict` (returns latest item) |
-| `POST` | `/items/:id/claim` | Authenticated<br>`Member+` in team | None | `200 OK`<br>`{ item: WorkItem }` | `403 Forbidden`<br>`404 Not Found`<br>`409 Already Claimed` |
-| `POST` | `/items/:id/assign` | Authenticated<br>`Member+` (Assignee), `Lead`, `Admin` | `{ version: number, assignee_id: string \| null }`<br>*(Member can only assign self $\to$ teammate; Lead/Admin can assign any or unassign)* | `200 OK`<br>`{ item: WorkItem }` | `400 Validation Error`<br>`403 Insufficient Role`<br>`404 Not Found`<br>`409 Version Conflict` |
-| `POST` | `/items/:id/transition` | Authenticated<br>Role per state rules | `{ version: number, to_status: string, reason?: string }` | `200 OK`<br>`{ item: WorkItem }` | `400 Invalid Transition`<br>`403 Insufficient Role / Cannot Approve Own Item`<br>`404 Not Found`<br>`409 Version Conflict` |
+| `PATCH` | `/items/:id` | Authenticated<br>`Member+` (Assignee, Lead, Admin) | `{ version: number, title?, description?, due_date?, priority? }`<br>*(Changing `priority` requires `Lead` or `Admin` role)* | `200 OK`<br>`{ item: WorkItem }` | `400 Validation Error`<br>`403 Insufficient Role`<br>`404 Not Found`<br>`409 STALE_VERSION` (returns latest item) |
+| `POST` | `/items/:id/claim` | Authenticated<br>`Member+` in team | None | `200 OK`<br>`{ item: WorkItem }` | `403 Forbidden`<br>`404 Not Found`<br>`409 ALREADY_CLAIMED` |
+| `POST` | `/items/:id/assign` | Authenticated<br>`Member+` (Assignee), `Lead`, `Admin` | `{ version: number, assignee_id: string \| null }`<br>*(Member can only assign self $\to$ teammate; Lead/Admin can assign any or unassign)* | `200 OK`<br>`{ item: WorkItem }` | `400 Validation Error`<br>`403 Insufficient Role`<br>`404 Not Found`<br>`409 STALE_VERSION` |
+| `POST` | `/items/:id/transition` | Authenticated<br>Role per state rules | `{ version: number, to_status: string, reason?: string }` | `200 OK`<br>`{ item: WorkItem }` | `400 INVALID_TRANSITION / REASON_REQUIRED`<br>`403 INSUFFICIENT_TEAM_ROLE / CANNOT_APPROVE_OWN_ITEM / APPROVAL_REQUIRES_LEAD_ROLE`<br>`404 NOT_FOUND`<br>`409 STALE_VERSION` |
 | `GET` | `/items/:id/activity` | Authenticated<br>Team Member | **Query:** `cursor`, `limit` | `200 OK`<br>`{ events: ActivityEvent[], next_cursor }` | `404 Not Found` |
 | `POST` | `/items/:id/comments` | Authenticated<br>Any team role (inc. Viewer) | `{ body: string }` | `201 Created`<br>`{ comment: Comment }` | `400 Empty Body`<br>`404 Not Found` |
 | `GET` | `/dashboard/summary` | Authenticated<br>Team Member | **Query:** `team_id` (required) | `200 OK`<br>`{ assigned_to_me_count, unassigned_urgent_count, awaiting_my_approval_count }` | `400 Bad Request`<br>`403 Forbidden` |
+
+#### Standard Error Code to HTTP Status Mapping Table
+
+| Error Code | HTTP Status | Description / Condition |
+| :--- | :---: | :--- |
+| `IDEMPOTENCY_KEY_REQUIRED` | **400 Bad Request** | Missing or empty `Idempotency-Key` header on `POST /items`. |
+| `INVALID_TRANSITION` | **400 Bad Request** | Structurally invalid transition in the state machine (e.g. `OPEN -> RESOLVED`, `OPEN -> OPEN`, `RESOLVED -> OPEN`). |
+| `REASON_REQUIRED` | **400 Bad Request** | Mandatory reason missing when rejecting (`AWAITING_APPROVAL -> IN_PROGRESS`), regressing (`RESOLVED -> IN_PROGRESS`), or discarding (`OPEN -> CLOSED`). |
+| `VALIDATION_ERROR` | **400 Bad Request** | Missing mandatory payload fields, invalid types, or malformed data. |
+| `INSUFFICIENT_TEAM_ROLE` | **403 Forbidden** | User is an active member of the target team, but their role is too low for the attempted action. |
+| `CANNOT_APPROVE_OWN_ITEM` | **403 Forbidden** | Four-eyes compliance violation: item creator cannot approve their own item (`req.user.id === item.created_by_id`). |
+| `APPROVAL_REQUIRES_LEAD_ROLE`| **403 Forbidden** | Attempted approval (`AWAITING_APPROVAL -> RESOLVED`) by a user with `Member` or `Viewer` role. |
+| `NOT_TEAM_MEMBER` | **403 Forbidden** | Attempting team-scoped queries or creation (`GET /items?team_id=...`, `POST /items`) for a team the user does not belong to. |
+| `NOT_FOUND` | **404 Not Found** | Work item does not exist, or exists in a team the user is NOT a member of (prevents resource enumeration). |
+| `STALE_VERSION` | **409 Conflict** | Optimistic concurrency conflict: submitted version does not match current version in DB (returns latest item in `details.latest_item`). |
+| `ALREADY_CLAIMED` | **409 Conflict** | Atomic claim conflict: item is already claimed by another user or is no longer in `OPEN` status. |
+| `IDEMPOTENCY_PAYLOAD_MISMATCH`| **422 Unprocessable** | Request submitted with an existing idempotency key, but payload hash differs from original request. |
+| `DATABASE_UNAVAILABLE` | **503 Service Unavail**| PostgreSQL pool or socket connection failed. |
 
 ---
 
