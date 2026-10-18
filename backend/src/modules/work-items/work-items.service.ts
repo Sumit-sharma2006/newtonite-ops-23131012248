@@ -189,7 +189,12 @@ export class WorkItemsService {
       await workItemsRepository.insertOutboxJob(client, {
         event_type: 'WORK_ITEM_CREATED',
         aggregate_id: newItem.id,
-        payload: newItem
+        payload: {
+          work_item_id: newItem.id,
+          title: newItem.title,
+          actor_id: user.id,
+          item: newItem
+        }
       });
 
       const responseBody = { item: newItem };
@@ -431,9 +436,14 @@ export class WorkItemsService {
 
       // Outbox job in same transaction
       await workItemsRepository.insertOutboxJob(client, {
-        event_type: 'WORK_ITEM_CLAIMED',
+        event_type: 'CLAIMED',
         aggregate_id: itemId,
-        payload: claimed
+        payload: {
+          work_item_id: claimed.id,
+          assignee_id: claimed.assignee_id,
+          title: claimed.title,
+          actor_id: user.id
+        }
       });
 
       return claimed;
@@ -514,9 +524,16 @@ export class WorkItemsService {
 
       // Outbox event
       await workItemsRepository.insertOutboxJob(client, {
-        event_type: 'WORK_ITEM_STATUS_CHANGED',
+        event_type: 'STATUS_CHANGED',
         aggregate_id: itemId,
-        payload: transitioned
+        payload: {
+          work_item_id: transitioned.id,
+          title: transitioned.title,
+          actor_id: user.id,
+          from_status: item.status,
+          to_status: transitioned.status,
+          item: transitioned
+        }
       });
 
       return transitioned;
@@ -580,9 +597,14 @@ export class WorkItemsService {
       });
 
       await workItemsRepository.insertOutboxJob(client, {
-        event_type: 'WORK_ITEM_ASSIGNED',
+        event_type: 'ASSIGNED',
         aggregate_id: itemId,
-        payload: assigned
+        payload: {
+          work_item_id: assigned.id,
+          assignee_id: assigned.assignee_id,
+          title: assigned.title,
+          actor_id: user.id
+        }
       });
 
       return assigned;

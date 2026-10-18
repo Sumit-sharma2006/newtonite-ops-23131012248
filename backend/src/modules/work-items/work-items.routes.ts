@@ -109,15 +109,6 @@ workItemsRouter.patch('/:id', async (req: Request, res: Response, next: NextFunc
   }
 });
 
-workItemsRouter.post('/:id/edit', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const item = await workItemsService.updateItem(req.user!, req.params.id, req.body);
-    res.status(200).json({ item });
-  } catch (err) {
-    next(err);
-  }
-});
-
 /**
  * POST /items/:id/claim
  * Atomically claim an open, unassigned item for the current user.

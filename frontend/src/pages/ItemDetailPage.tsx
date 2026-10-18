@@ -240,8 +240,8 @@ export const ItemDetailPage: React.FC<ItemDetailPageProps> = ({
         payload.priority = editPriority;
       }
 
-      return apiClient<{ item: WorkItem }>(`/items/${itemId}/edit`, {
-        method: 'POST',
+      return apiClient<{ item: WorkItem }>(`/items/${itemId}`, {
+        method: 'PATCH',
         body: JSON.stringify(payload)
       });
     },

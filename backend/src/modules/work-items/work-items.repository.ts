@@ -249,8 +249,8 @@ export class WorkItemsRepository {
   ): Promise<WorkItemRow | null> {
     const result = await client.query(
       `UPDATE work_items
-       SET status = $1,
-           assignee_id = CASE WHEN $1 = 'OPEN' THEN NULL ELSE assignee_id END,
+       SET status = $1::work_item_status,
+           assignee_id = CASE WHEN $1::text = 'OPEN' THEN NULL ELSE assignee_id END,
            version = version + 1,
            updated_at = NOW()
        WHERE id = $2 AND version = $3
@@ -270,8 +270,8 @@ export class WorkItemsRepository {
   ): Promise<WorkItemRow | null> {
     const result = await client.query(
       `UPDATE work_items
-       SET assignee_id = $1,
-           status = CASE WHEN $1 IS NULL AND status = 'IN_PROGRESS' THEN 'OPEN' ELSE status END,
+       SET assignee_id = $1::uuid,
+           status = CASE WHEN $1::uuid IS NULL AND status = 'IN_PROGRESS' THEN 'OPEN' ELSE status END,
            version = version + 1,
            updated_at = NOW()
        WHERE id = $2 AND version = $3
