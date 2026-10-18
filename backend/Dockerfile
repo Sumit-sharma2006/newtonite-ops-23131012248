@@ -12,5 +12,5 @@ COPY tsconfig.json ./
 
 EXPOSE 3000
 
-# Runs migrations automatically on startup before listening
-CMD ["sh", "-c", "npm run migrate && npm start"]
+# Runs migrations and seeds if empty automatically on startup before listening
+CMD ["sh", "-c", "npm run migrate && npm run seed:if-empty && npm start"]

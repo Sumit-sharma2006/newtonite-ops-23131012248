@@ -23,16 +23,16 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "=== 1. AUTHENTICATING USERS ===" -ForegroundColor Cyan
 # Alice: Lead in Incident Response, Member in Payments
-$aliceLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"alice.<rollno>@pressuredesk.io","password":"Password123!"}'
+$aliceLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"alice@pressuredesk.io","password":"Password123!"}'
 $aliceToken = $aliceLogin.token
 $incidentTeamId = ($aliceLogin.user.memberships | Where-Object { $_.team_slug -eq 'incident-response' }).team_id
 
 # Bob: Lead in Payments, Member in Incident Response
-$bobLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"bob.<rollno>@pressuredesk.io","password":"Password123!"}'
+$bobLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"bob@pressuredesk.io","password":"Password123!"}'
 $bobToken = $bobLogin.token
 
 # Judy: Viewer in Payments & Core Infra, NOT in Incident Response
-$judyLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"judy.<rollno>@pressuredesk.io","password":"Password123!"}'
+$judyLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"judy@pressuredesk.io","password":"Password123!"}'
 $judyToken = $judyLogin.token
 Write-Host "Logged in Alice, Bob, and Judy successfully.`n" -ForegroundColor Green
 
@@ -138,7 +138,7 @@ Write-Host "`n=== ALL MANUAL CHECKS PASSED ===" -ForegroundColor Cyan
 ```bash
 curl -s -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"alice.<rollno>@pressuredesk.io","password":"Password123!"}'
+  -d '{"email":"alice@pressuredesk.io","password":"Password123!"}'
 ```
 
 ### 2. Idempotent Item Creation

@@ -152,4 +152,45 @@ describe('Integration - Authorization & Resource-Level Security', () => {
     const resInvalid = await request(app).get('/items').set('Authorization', 'Bearer invalid.jwt.token');
     expect(resInvalid.status).toBe(401);
   });
+
+  it('GET /auth/me returns authenticated user identity with fresh memberships loaded from database', async () => {
+    // 1. Initial lookup
+    const res = await request(app)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${fixture.leadA.token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.id).toBe(fixture.leadA.id);
+    expect(res.body.user.email).toBe('lead.a@pressuredesk.io');
+    expect(res.body.user.full_name).toBe('Lead Alice');
+    expect(res.body.memberships).toHaveLength(1);
+    expect(res.body.memberships[0].team_id).toBe(fixture.teamA.id);
+    expect(res.body.memberships[0].role).toBe('LEAD');
+
+    // 2. Direct DB mutation: add team B membership
+    await pool.query(
+      `INSERT INTO memberships (user_id, team_id, role) VALUES ($1, $2, 'MEMBER');`,
+      [fixture.leadA.id, fixture.teamB.id]
+    );
+
+    // 3. Immediate fresh verification: GET /auth/me reflects updated DB state
+    const resUpdated = await request(app)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${fixture.leadA.token}`);
+
+    expect(resUpdated.status).toBe(200);
+    expect(resUpdated.body.memberships).toHaveLength(2);
+    const roles = resUpdated.body.memberships.map((m: any) => ({ team_id: m.team_id, role: m.role }));
+    expect(roles).toContainEqual({ team_id: fixture.teamA.id, role: 'LEAD' });
+    expect(roles).toContainEqual({ team_id: fixture.teamB.id, role: 'MEMBER' });
+
+    // 4. Unauthenticated checks for /auth/me
+    const unauthMissing = await request(app).get('/auth/me');
+    expect(unauthMissing.status).toBe(401);
+    expect(unauthMissing.body.error.code).toBe('UNAUTHORIZED');
+
+    const unauthInvalid = await request(app).get('/auth/me').set('Authorization', 'Bearer forged.token.here');
+    expect(unauthInvalid.status).toBe(401);
+    expect(unauthInvalid.body.error.code).toBe('INVALID_TOKEN');
+  });
 });

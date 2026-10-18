@@ -438,8 +438,8 @@ All endpoints require `Authorization: Bearer <token>` unless marked public. All 
 
 #### 2. Idempotency Keys (Single-Transaction Safety)
 
-* **Problem with separate reservation**: Reserving a key as `PROCESSING` before running the business transaction leaves the key stuck forever if the server crashes in between.
-* **Fix**: Key insert, item creation, activity write, outbox write, and stored response update happen in the **exact same database transaction**.
+* **Single-Transaction Invariant**: Key insertion, item creation, activity write, outbox write, and stored response update all execute in the exact same database transaction.
+* **Atomic Pipeline**: Key insert, item creation, activity write, outbox write, and stored response update happen in the **exact same database transaction**.
 * **Flow**:
   ```ts
   const client = await pool.connect();
@@ -489,7 +489,7 @@ All endpoints require `Authorization: Bearer <token>` unless marked public. All 
     client.release();
   }
   ```
-* **Why this is crash-proof**: If the server crashes mid-flight, the transaction rolls back cleanly. No orphaned `PROCESSING` key is left behind. A subsequent retry executes cleanly without manual timeout cleanup.
+* **Why this is crash-proof**: If the server crashes mid-flight, the transaction rolls back cleanly. No orphaned idempotency key is left behind. A subsequent retry executes cleanly without manual timeout cleanup.
 
 #### 3. Optimistic Locking with Version Column
 
@@ -521,8 +521,7 @@ All endpoints require `Authorization: Bearer <token>` unless marked public. All 
 
 #### 5. Search + Keyset Pagination Compatibility
 
-* Full-text search with `ORDER BY ts_rank(...)` breaks keyset pagination because rank values are non-unique floats.
-* **Fix**: When keyword search `q` is provided, evaluate `tsv @@ websearch_to_tsquery('english', $q)` strictly as a `WHERE` condition, and preserve `ORDER BY created_at DESC, id DESC`.
+* **Search + Keyset Pagination Compatibility**: When keyword search `q` is provided, evaluate `tsv @@ websearch_to_tsquery('english', $q)` strictly as a `WHERE` filter condition, and preserve `ORDER BY created_at DESC, id DESC` to guarantee strict keyset determinism.
 
 #### 6. Database and Worker Failure Modes
 
@@ -745,6 +744,6 @@ pressuredesk/
 
 #### "Next Week I Would..." Notes
 * **Server-Sent Events (SSE) for Live Triage**: Implement an SSE endpoint (`/teams/:id/live-events`) that listens to PostgreSQL `LISTEN/NOTIFY` (emitted by outbox inserts) to automatically invalidate TanStack Query caches in the browser without polling.
-* **JSON-Patch RFC 6902 Diffs in Activity Events**: Store concrete structured field-level diffs (`[{"op": "replace", "path": "/priority", "value": "URGENT"}]`) inside `activity_events.from_state / to_state` to render rich GitHub-style audit diffs.
+* **Structured JSON-Patch Diffs in Activity Events**: Store concrete structured field-level diffs (`[{"op": "replace", "path": "/priority", "value": "URGENT"}]`) inside `activity_events.from_state / to_state` to render rich GitHub-style audit diffs.
 * **Automated SLA Breach Watcher**: Add a lightweight cron job querying indexed `due_date` thresholds to auto-escalate stagnant `OPEN` items to `URGENT` priority when within 2 hours of SLA violation.
 * **Toxiproxy Integration Tests**: Introduce network failure simulation (latency injection, TCP connection reset) in the Supertest concurrency suite to prove resilience during partial network partitions.

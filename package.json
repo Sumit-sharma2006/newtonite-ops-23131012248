@@ -5,6 +5,7 @@
   "scripts": {
     "migrate": "tsx scripts/migrate.ts",
     "seed": "tsx scripts/seed.ts",
+    "seed:if-empty": "tsx scripts/seed-if-empty.ts",
     "db:reset": "tsx scripts/reset.ts",
     "test": "vitest run",
     "test:watch": "vitest",

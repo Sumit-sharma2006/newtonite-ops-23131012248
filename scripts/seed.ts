@@ -7,30 +7,29 @@ dotenv.config();
 const connectionString = process.env.DATABASE_URL || 
   `postgres://${process.env.DB_USER || 'pressuredesk'}:${process.env.DB_PASSWORD || 'pressuredesk123'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'pressuredesk'}`;
 
-const pool = new Pool({ connectionString });
-
-const ROLL_NO = process.env.ROLL_NO || '<rollno>';
-
-async function seed() {
+export async function seed(truncate = true) {
+  const pool = new Pool({ connectionString });
   const client = await pool.connect();
   try {
-    console.log(`Starting seed process for PressureDesk [Roll No: ${ROLL_NO}]...`);
+    console.log(`Starting seed process for PressureDesk...`);
 
-    // Clean existing data using TRUNCATE (avoids activity_events BEFORE DELETE trigger error)
-    console.log('Truncating existing tables...');
-    await client.query(`
-      TRUNCATE TABLE 
-        notifications,
-        outbox_jobs,
-        idempotency_keys,
-        comments,
-        activity_events,
-        work_items,
-        memberships,
-        teams,
-        users 
-      CASCADE;
-    `);
+    if (truncate) {
+      // Clean existing data using TRUNCATE (avoids activity_events BEFORE DELETE trigger error)
+      console.log('Truncating existing tables...');
+      await client.query(`
+        TRUNCATE TABLE 
+          notifications,
+          outbox_jobs,
+          idempotency_keys,
+          comments,
+          activity_events,
+          work_items,
+          memberships,
+          teams,
+          users 
+        CASCADE;
+      `);
+    }
 
     // 1. Seed Users (10 users with bcrypt hashed passwords)
     console.log('Seeding 10 users...');
@@ -283,7 +282,13 @@ async function seed() {
   }
 }
 
-seed().catch(err => {
-  console.error('Seed script failed:', err);
-  process.exit(1);
-});
+const isMainModule =
+  (process.argv[1]?.endsWith('seed.ts') || process.argv[1]?.endsWith('seed.js')) &&
+  !process.argv[1]?.includes('seed-if-empty');
+
+if (isMainModule) {
+  seed(true).catch(err => {
+    console.error('Seed script failed:', err);
+    process.exit(1);
+  });
+}

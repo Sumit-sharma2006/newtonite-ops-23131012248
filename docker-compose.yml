@@ -33,7 +33,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "npm run migrate && npm start"
+    command: sh -c "npm run migrate && npm run seed:if-empty && npm start"
 
   worker:
     build:
